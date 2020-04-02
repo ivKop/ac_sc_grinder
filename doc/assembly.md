@@ -13,23 +13,34 @@ Device assembly <!-- omit in toc -->
 
 ## Required components
 
-\- | Name | Comment
+&nbsp; | Name | Comment
 -----|-------------|--------
 1 | [Hilda 180W](https://www.aliexpress.com/af/hilda-180w.html?SortType=total_tranpro_desc) grinder | Such grinders are available under other labels. Any, exactly as on photos below, will be ok.
 2 | [PCB & Components](https://easyeda.com/speed/AC-speed-control-for-grinder) | Go to EasyEda project page and order both in couple of clicks. If you order PCB first, components second, then you will be able to join delivery and save some bucks.
-3 | [Cheap ST-link/V2 programmer](https://www.aliexpress.com/af/st-link-v2.html?SortType=total_tranpro_desc) | Required to upload firmware, only 2$. You can also order it at [LCSC](https://lcsc.com/search?q=st-link) with other components.
-4 | PCB protective coating | [Plastik 70 CRC](https://www.google.com/search?q=Plastik+70+CRC) or any other acrylic [insulating lacquer](https://www.google.com/search?q=insulating+lacquer).
-5 | [Male](https://www.aliexpress.com/item/-/32700932502.html) & [female](https://www.aliexpress.com/item/-/32593170276.html) 2.8x0.5mm power terminals | Optional. You can solder power wires directly.
+3 | PCB protective coating | [Plastik 70 CRC](https://www.google.com/search?q=Plastik+70+CRC) or any other acrylic [insulating lacquer](https://www.google.com/search?q=insulating+lacquer).
+4 | [Male](https://www.aliexpress.com/item/-/32700932502.html) & [female](https://www.aliexpress.com/item/-/32593170276.html) 2.8x0.5mm power terminals | Optional. You can solder power wires directly.
+5 | [22 AWG wire](https://www.aliexpress.com/item/32854919883.html) | Stainless steel, for SMT stencil only. Position over PCB, via reference holes.
 
+Note, if you have soldering air gun, it's good idea to order SMT stencil to
+simplify assembly. Select custom stencil size 100*100mm for cheap delivery.
 
-**Note on order at LCSC.** When you use "Order at LCSC" button to import BOM,
-check "Part Match Confidence" column to filter garbage. Correct items usually
-have 100% match confidence value.
+**Optional parts**
 
-![BOM import match confidence](./images/lcsc_import.png)
+Those may be required only for development, adding "lab stand" features - hall
+tacho, wireless logger, SWD debug.
 
-Remove items `PIN 1 MM`, `PIN 3*0.5 MM` & `HILDA POTENTIOMETER`.
-
+&nbsp; | Name | Comment
+-----|-------------|--------
+1 | [Hall sensor](https://lcsc.com/product-detail/Magnetic-Sensors_HX-hengjiaxing-HX4913_C296270.html) | Tacho.
+2 | [Magnetic resin](https://www.aliexpress.com/item/33017302814.html) | Do magnetic mark for hall sensor.
+3 | [Magnetic field viewer](https://www.aliexpress.com/item/32967659973.html) |
+4 | [RF sender](https://lcsc.com/product-detail/Wireless-Modules_nRF24L01-wireless-module_C84802.html) | Logs transmitter. Note, similar modules from AliExpress have dofferent power pinout.
+5 | [RF receiver](https://www.aliexpress.com/item/4000112750588.html) | Logs receiver.
+6 | [1.27mm 8 pin female conn](https://lcsc.com/product-detail/Pin-Header-Female-Header_BOOMELE-Boom-Precision-Elec-C92297_C92297.html) |
+7 | [1.27mm male pins](https://lcsc.com/product-detail/Pin-Header-Female-Header_BOOMELE-Boom-Precision-Elec-1-27mm-1x50P_C3408.html) |
+8 | [1.27mm pogo pins clip](https://www.aliexpress.com/item/32959606674.html) | SWD debug.
+9 | [Cheap ST-link/V2 programmer](https://www.aliexpress.com/af/st-link-v2.html?SortType=total_tranpro_desc) | For hardware debug. You can also order it at [LCSC](https://lcsc.com/search?q=st-link) with other components.
+10 | [USB isolator](https://www.aliexpress.com/af/usb-isolator.html) | MUST be used with ST-Link/V2.
 
 ## Extract some parts from original board
 
@@ -49,11 +60,11 @@ flux cleanup phase, some solvents can wash off speed marks.
 
 PCB top:
 
-![PCB top side](./images/pcb_top.jpg)
+![PCB top side](./images/pcb_v2_top.jpg)
 
 PCB bottom:
 
-![PCB bottom side](./images/pcb_bottom.jpg)
+![PCB bottom side](./images/pcb_v2_bottom.jpg)
 
 
 ## Cleanup PCB
