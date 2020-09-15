@@ -15,10 +15,6 @@
     - speed
 */
 
-// Buffer used for storage only positive half-wave values.
-// But we use the same size as in calibrator (to share later).
-constexpr int voltage_buffer_length = APP_TICK_FREQUENCY / 48;
-
 class Meter
 {
 public:
@@ -95,21 +91,16 @@ public:
 
     void reset_state()
     {
-        once_zero_crossed = false;
         speed = 0;
 
         p_sum_div_1024 = 0;
         i2_sum_div_16 = 0;
-
-        voltage_buffer_head = 0;
-        voltage_buffer_tick_counter = 0;
+        sum_counter = 0;
 
         io.out.clear();
     }
 
 private:
-    bool once_zero_crossed = false;
-
     // Motor resistance interpolation table
     fix16_t cfg_r_table[CFG_R_INTERP_TABLE_LENGTH];
     fix16_t cfg_r_interp_scale_inv_table[CFG_R_INTERP_TABLE_LENGTH];
@@ -141,16 +132,8 @@ private:
 
     fix16_t p_sum_div_1024 = 0;  // active power / 1024
     fix16_t i2_sum_div_16 = 0;       // square of current / 16
+    int sum_counter = 0;
 
-    // voltage with extrapolated negative half-wave
-    fix16_t virtual_voltage;
-
-    // Buffer for extrapolating voltage during negative half-wave
-    fix16_t voltage_buffer[voltage_buffer_length];
-    uint32_t voltage_buffer_head = 0;
-    // Holds number of ticks from the beginning of
-    // negative half-wave
-    uint32_t voltage_buffer_tick_counter = 0;
 
     void speed_tick(io_data_t &io_data)
     {
@@ -161,46 +144,17 @@ private:
             return;
         }
 
-        if (!once_zero_crossed)
+        // Calculate sums
+        // Scale values to prevent overflow (but sill keep dsired precision)
+        if (io_data.voltage >= 0)
         {
-            if (!io_data.zero_cross_up)
-            {
-                speed = 0;
-                return;
-            }
-
-            once_zero_crossed = true;
-        }
-
-        // Reset voltage buffer head at zero crossings
-        if (io_data.zero_cross_down)
-        {
-            voltage_buffer_tick_counter = 0;
-        }
-
-        // Save voltage samples during positive half-wave
-        // to extrapolate during negative half-wave
-        if (io_data.voltage > 0)
-        {
-            // buffer overflow check
-            if (voltage_buffer_head < voltage_buffer_length) {
-                voltage_buffer[voltage_buffer_head++] = io_data.voltage;
-            }
-            virtual_voltage = io_data.voltage;
+            p_sum_div_1024 += fix16_mul(io_data.voltage >> 8, io_data.current >> 2);
         }
         else
         {
-            // buffer overflow check
-            if (voltage_buffer_tick_counter < voltage_buffer_head) {
-                virtual_voltage = -voltage_buffer[voltage_buffer_tick_counter++];
-            } else {
-                virtual_voltage = -voltage_buffer[voltage_buffer_head--];
-            }
+            p_sum_div_1024 -= fix16_mul((-io_data.voltage) >> 8, io_data.current >> 2);
         }
-
-        // Calculate sums
-        // Scale values to prevent overflow (but sill keep dsired precision)
-        p_sum_div_1024 += fix16_mul(virtual_voltage >> 8, io_data.current >> 2);
+        
         i2_sum_div_16 += fix16_mul(io_data.current >> 2, io_data.current >> 2);
 
         // Calculate speed at end of negative half-wave
@@ -218,14 +172,14 @@ private:
             speed = fix16_div(r_ekv, cfg_rekv_to_speed_factor);
 
             // Attempt to drop noise on calibration phase
-            if (p_sum_div_1024 < ((int64_t)cfg_min_power_treshold * voltage_buffer_head) >> 10) speed = 0;
+            if (p_sum_div_1024 < ((int64_t)cfg_min_power_treshold * sum_counter) >> 10) speed = 0;
 
             // Clamp calculated speed value, speed can't be negative
             if (speed < 0) speed = 0;
 
             p_sum_div_1024 = 0;
             i2_sum_div_16 = 0;
-            voltage_buffer_head = 0;
+            sum_counter = 0;
         }
     }
 };
