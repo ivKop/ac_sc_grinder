@@ -3,7 +3,7 @@
 
 
 #include "math/fix16_math.h"
-#include "math/truncated_mean.h"
+#include "math/median_filter.h"
 #include "config_map.h"
 #include "app.h"
 #include "app_hal.h"
@@ -71,9 +71,9 @@ public:
         //
 
         // Apply filters
-        uint16_t adc_voltage = (uint16_t)truncated_mean(adc_voltage_buf, ADC_FETCH_PER_TICK, F16(1.1));
-        uint16_t adc_current = (uint16_t)truncated_mean(adc_current_buf, ADC_FETCH_PER_TICK, F16(1.1));
-        uint16_t adc_v_refin = (uint16_t)truncated_mean(adc_v_refin_buf, ADC_FETCH_PER_TICK, F16(1.1));
+        uint16_t adc_voltage = mfilter(adc_voltage_buf);
+        uint16_t adc_current = mfilter(adc_current_buf);
+        uint16_t adc_v_refin = mfilter(adc_v_refin_buf);
         // Skip first filter for knob, o save CPU (second filter is enough)
         //uint16_t adc_knob = (uint16_t)truncated_mean(adc_knob_buf, ADC_FETCH_PER_TICK, F16(1.1));
         uint16_t adc_knob = adc_knob_buf[0];
@@ -140,6 +140,7 @@ public:
     }
 
 private:
+    MedianFilterTemplate<ADC_FETCH_PER_TICK> mfilter;
 
     // Previous iteration values
     fix16_t prev_voltage = 0;
