@@ -3,6 +3,7 @@
 
 #include "../math/fix16_math.h"
 #include "../app.h"
+#include "../math/median_filter.h"
 
 #include <limits.h>
 #include <cmath>
@@ -49,6 +50,8 @@ static const fix16_t start_stop_adjust = fix16_from_float(
 
 // Max 10 seconds to store data on start/stop time measure
 #define SPEED_DATA_SAVE_TIME_MAX 10
+
+#define SPEED_FILTER_LEN 12
 
 // Lowpass coefficient value
 // LOWPASS_FC - cutoff frequency, Hz
@@ -209,7 +212,6 @@ public:
             measure_amplitude_max_speed = 0;
             measure_amplitude_min_speed = fix16_maximum;
             measure_amplitude_ticks = 0;
-            median_filter.reset();
             ticks_cnt = 0;
 
             while (measure_amplitude_ticks < measure_amplitude_ticks_max)
@@ -220,13 +222,11 @@ public:
                 YIELD(false);
                 if (!io_data.zero_cross_up) continue;
 
-                ticks_cnt++;
-                median_filter.add(meter.speed);
+                mfilter_buf[ticks_cnt++] = meter.speed;
 
-                if (ticks_cnt >= 12)
+                if (ticks_cnt >= SPEED_FILTER_LEN/* 12 */)
                 {
-                    fix16_t filtered_speed = median_filter.result();
-                    median_filter.reset();
+                    fix16_t filtered_speed = mfilter(mfilter_buf);
                     ticks_cnt = 0;
 
                     if (measure_amplitude_max_speed < filtered_speed)
@@ -486,7 +486,9 @@ private:
 
     int measure_attempts = 0;
 
-    MedianIteratorTemplate<fix16_t, 32> median_filter;
+    MedianFilterTemplate<SPEED_FILTER_LEN> mfilter;
+    fix16_t mfilter_buf[SPEED_FILTER_LEN];
+
     fix16_t motor_start_stop_time;
 
     int measure_amplitude_ticks = 0;

@@ -2,8 +2,6 @@
 #define __METER__
 
 #include "math/fix16_math.h"
-#include "math/truncated_mean.h"
-#include "math/median.h"
 #include "config_map.h"
 #include "app_hal.h"
 #include "app.h"

@@ -3,7 +3,7 @@
 
 
 #include "fix16_math.h"
-#include "median.h"
+#include "median_filter.h"
 
 
 // Sliding tracker to wait until input value become stable.
@@ -23,7 +23,6 @@ public:
     {
         head_idx = 0;
         data_count = 0;
-        median_filter.reset();
         ticks_count = 0;
         median_count = 0;
     }
@@ -38,17 +37,16 @@ public:
             return;
         }
 
-        median_filter.add(val);
+        median_buf[median_count] = val;
         ticks_count++;
         median_count++;
 
         if (median_count >= MEDIAN_LEN)
         {
-            data[head_idx++] = median_filter.result();
+            data[head_idx++] = mfilter(median_buf);
             if (head_idx == FILTER_LENGTH) head_idx = 0;
             data_count++;
             median_count = 0;
-            median_filter.reset();
         }
     }
 
@@ -97,6 +95,8 @@ public:
 
 
 private:
+    MedianFilterTemplate<MEDIAN_LEN> mfilter;
+    fix16_t median_buf[MEDIAN_LEN];
     fix16_t data[FILTER_LENGTH];
     int head_idx;
     int data_count;
@@ -104,8 +104,6 @@ private:
     int median_count;
 
     fix16_t edge_multiplier = PRECISION_IN_PERCENTS / 100;
-
-    MedianIteratorTemplate<fix16_t, MEDIAN_LEN >= 2 ? MEDIAN_LEN : 2> median_filter;
 };
 
 #endif
